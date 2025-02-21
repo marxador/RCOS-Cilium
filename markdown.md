@@ -48,6 +48,21 @@
   - Check running containers. (docker ps)
   - Stopping a container. (docker stop<container_id>)
 
+### Adding a Second Microservice
+- Make a second service that works with the first
+  - make sure to add the URL in a variable somewhere
+    - SERVICE_A_URL = "http://127.0.0.1:5000/data"
+  - need to install requests library
+    - pip install requests
+  - run both services at the same time and see the communication between them
+    - go to http://127.0.0.1:5001/fetch to check
+- Build both together on Docker
+  - make a docker file for both services
+    - make a new file called Dockerfile
+  - build both services and run them like before
+    - docker build -t service-a -f Dockerfile.serviceA_test .
+
+
 ## Phase 3: Deploy Microservices
 
 ### Build Two Microservices

@@ -1,0 +1,12 @@
+# Dockerfile.serviceA
+FROM python:3.9
+
+WORKDIR /app
+
+COPY serviceB_test.py .  
+
+RUN pip install flask requests  
+
+EXPOSE 5001  
+
+CMD ["python", "serviceB_test.py"]  

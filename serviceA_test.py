@@ -9,7 +9,8 @@ def home():
 
 @app.route("/data")
 def data():
-    return jsonify({"message": "Data will be shown here"})
+    sample_data = {"user": "John Doe", "site": "www.amazon.com", "password": "password123"}
+    return jsonify(sample_data)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
