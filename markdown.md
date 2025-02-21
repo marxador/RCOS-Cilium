@@ -30,7 +30,25 @@
         helm version
         cilium status
 
-## Phase 2: Deploy Microservices
+## Phase 2: Testing/Learning how to make Microservices
+
+### Building a Microservice on Docker Desktop
+- Make a simple microservice that says a message and run it on Docker
+  - install flask through the terminal (pip install flask)
+  - make a serviceA.py say a message using jsonify
+  - run the service by typing, python service.py, in the terminal
+  - then can click on the link and see the message in your browser
+- Adding routes
+  - by adding some more code you can add routes to the links
+  - then if you add /route_name at the end of the link it will do the new task
+- Build and running a Container
+  - cd path\to\your\project
+  - docker build -t service-a
+  - docker run -d -p 5000:5000 service-a
+  - Check running containers. (docker ps)
+  - Stopping a container. (docker stop<container_id>)
+
+## Phase 3: Deploy Microservices
 
 ### Build Two Microservices
 - Develop two complex service APIs:
