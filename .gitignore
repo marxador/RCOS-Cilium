@@ -48,3 +48,8 @@ Thumbs.db
 # Ignore directories created by package managers and compiled binaries
 bin/
 obj/
+
+# Ignore Sensitive files
+.env
+__pycache__/
+*.pyc
