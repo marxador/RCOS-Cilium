@@ -70,6 +70,44 @@
   - **Service A** (provides core functionality)
   - **Service B** (communicates with Service A)
 - Containerize both services using Docker.
+### Using the Spotify API
+1. **Create a Spotify Developer Account**:
+   - Visit [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)
+   - Create an application and obtain `client_id` and `client_secret`
+
+2. **Install Required Library**:
+   ```sh
+   pip install spotipy
+   ```
+
+3. **Example Python Code for Spotify API**:
+   ```python
+   import spotipy
+   from spotipy.oauth2 import SpotifyClientCredentials
+   from flask import Flask, jsonify
+   
+   app = Flask(__name__)
+   
+   CLIENT_ID = "your_client_id"
+   CLIENT_SECRET = "your_client_secret"
+   
+   sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET))
+   
+   @app.route('/track/<track_name>')
+   def search_track(track_name):
+       result = sp.search(q=track_name, limit=1)
+       if result['tracks']['items']:
+           track = result['tracks']['items'][0]
+           return jsonify({
+               "name": track['name'],
+               "artist": track['artists'][0]['name'],
+               "url": track['external_urls']['spotify']
+           })
+       return jsonify({"error": "Track not found"})
+   
+   if __name__ == '__main__':
+       app.run(debug=True, host='0.0.0.0', port=5002)
+   ``` 
 
 ### Deploy the Services on Kubernetes
 1. **Create YAML Manifests**:
