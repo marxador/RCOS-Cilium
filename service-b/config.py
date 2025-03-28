@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY = "40be9881b67e497abf20bf53ad31a1e7"
+API_SECRET = "4caa08a3a3e94612b5a05bd97c2897ce"
+REDIRECT_URI = "http://127.0.0.1:3000"
