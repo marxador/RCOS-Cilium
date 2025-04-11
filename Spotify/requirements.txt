@@ -1,3 +1,4 @@
 flask
+requests
 spotipy
 python-dotenv
