@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spotify-config
+data:
+  SPOTIPY_CLIENT_ID: "your_client_id"
+  SPOTIPY_CLIENT_SECRET: "your_client_secret"
+  SPOTIPY_REDIRECT_URI: "http://localhost:30000/callback"

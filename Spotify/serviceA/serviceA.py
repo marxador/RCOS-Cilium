@@ -62,7 +62,7 @@ def get_wrapped():
         "year": year,
     }
 
-    res = requests.post("http://localhost:5001/monthly-wrapped", json=payload)
+    res = requests.post("http://service-b:5001/monthly-wrapped", json=payload)
     return jsonify(res.json())
 
 if __name__ == "__main__":

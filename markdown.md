@@ -80,41 +80,63 @@
    pip install spotipy
    ```
 
-3. **Example Python Code for Spotify API**:
-   ```python
-   import spotipy
-   from spotipy.oauth2 import SpotifyClientCredentials
-   from flask import Flask, jsonify
-   
-   app = Flask(__name__)
-   
-   CLIENT_ID = "your_client_id"
-   CLIENT_SECRET = "your_client_secret"
-   
-   sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET))
-   
-   @app.route('/track/<track_name>')
-   def search_track(track_name):
-       result = sp.search(q=track_name, limit=1)
-       if result['tracks']['items']:
-           track = result['tracks']['items'][0]
-           return jsonify({
-               "name": track['name'],
-               "artist": track['artists'][0]['name'],
-               "url": track['external_urls']['spotify']
-           })
-       return jsonify({"error": "Track not found"})
-   
-   if __name__ == '__main__':
-       app.run(debug=True, host='0.0.0.0', port=5002)
-   ``` 
-
 ### Deploy the Services on Kubernetes
-1. **Create YAML Manifests**:
-   - Deployment and Service definitions for **Service A**.
-   - Deployment and Service definitions for **Service B**.
-2. **Expose Services**:
-   - Use **ClusterIP** (internal communication) or **NodePort** (external access).
+Steps Taken to Build & Deploy the Spotify Monthly Wrapped App
+1. Created Two Microservices Using Flask
+Service A handles Spotify OAuth, collects the user's desired month and year, and sends that data along with the access token to Service B.
+
+Service B receives the data and access token, fetches the user's top Spotify tracks using the Spotify Web API (short-term range), and returns the results.
+
+2. Configured Spotify OAuth
+Registered a Spotify Developer application and obtained a Client ID and Client Secret.
+
+Set a valid Redirect URI (http://localhost:30000/callback) in the Spotify dashboard and matched it in the application code and environment variables.
+
+3. Created Dockerfiles for Both Services
+Wrote Dockerfiles for service_a and service_b to package each microservice with its dependencies.
+
+Used Python 3.10 slim base images for lightweight containers.
+
+4. Built Docker Images
+Configured Docker to use the Minikube daemon with eval $(minikube docker-env).
+
+Built both services locally inside Minikube using:
+
+bash
+Copy
+Edit
+docker build -t spotify-service-a ./service_a
+docker build -t spotify-service-b ./service_b
+5. Wrote Kubernetes YAML Manifests
+Created:
+
+A ConfigMap to store Spotify credentials and redirect URI.
+
+A Deployment and Service YAML for each microservice.
+
+Configured:
+
+service-a as a NodePort so it’s accessible externally.
+
+service-b as a ClusterIP service for internal communication.
+
+6. Deployed to Kubernetes
+Applied all Kubernetes manifests using kubectl apply -f ....
+
+Started the Minikube cluster and accessed service-a through:
+
+bash
+Copy
+Edit
+minikube service service-a
+7. Tested the Application Flow
+Logged in with Spotify via the frontend (service-a).
+
+Provided a target month and year.
+
+Verified that the backend (service-b) returned top track data using the user’s access token.
+
+
 
 ## Additional Notes
 - Used **Chocolatey** for some installations on Windows.
