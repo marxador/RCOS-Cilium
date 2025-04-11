@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   service-a:
     build: ./service-a
@@ -7,10 +5,16 @@ services:
       - "5000:5000"
     depends_on:
       - service-b
+    networks:
+      - app-network
 
   service-b:
     build: ./service-b
     ports:
       - "5001:5001"
-    env_file:
-      - ./service-b/.env
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

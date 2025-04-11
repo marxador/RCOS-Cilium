@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import requests
 
 app = Flask(__name__)
 
@@ -15,7 +14,7 @@ def send_message():
     if not month or not year:
         return jsonify({"error": "Missing month or year"}), 400
     
-    response = requests.post(SERVICE_B_URL, json={"month": month, "year": year})
+    response = post(SERVICE_B_URL, json={"month": month, "year": year})
     return jsonify(response.json())
 
 if __name__ == "__main__":

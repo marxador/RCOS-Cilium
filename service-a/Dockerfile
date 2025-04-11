@@ -1,11 +1,12 @@
-FROM python:3.9
+# Dockerfile.serviceA_test
+FROM python:3.8
 
 WORKDIR /app
 
-COPY . /app
+COPY . .
 
-RUN pip install -r requirements.txt
+RUN pip install flask -r requirements.txt
 
-EXPOSE 5000
+EXPOSE 5000  
 
-CMD ["python", "app.py"]
+CMD ["python", "app.py"]  
