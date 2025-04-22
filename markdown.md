@@ -1,144 +1,218 @@
-# Docker & Kubernetes Setup Guide
+# Docker, Kubernetes, and Cilium Deployment Guide for Spotify Monthly Wrapped App
 
-## Phase 1: Environment Setup 
+## Phase 1: Environment Setup
 
 ### Install Required Tools
+
 1. **Docker**: Install Docker for containerization ([Download Docker](https://www.docker.com/get-started)).
-    a. Verify installation
-        docker --version
-        kubectl version --client
+    - Verify installation:
+      ```bash
+      docker --version
+      ```
 
-2. **Kubernetes**: Install Minikube or Kind for a local Kubernetes cluster.
-    a. Verify installation
-        kubectl version --client
+2. **Kubernetes**: Install Minikube for a local Kubernetes cluster.
+    - Verify installation:
+      ```bash
+      minikube version
+      ```
+
 3. **kubectl**: Install the Kubernetes CLI tool ([Install kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)).
-    a. Install using **Chocolatey**
-        choco install kind
-    b. Verify installation
-        kind create cluster
-        kubectl get nodes
+    - Install using Chocolatey:
+      ```bash
+      choco install kubernetes-cli
+      ```
+    - Verify installation:
+      ```bash
+      kubectl version --client
+      ```
+
 4. **Helm**: Install Helm for managing Kubernetes applications ([Install Helm](https://helm.sh/docs/intro/install/)).
-    a. Install using **Chocolatey**
-        choco install kubernetes-helm
-    b. Verify installation
-        helm version
+    - Install using Chocolatey:
+      ```bash
+      choco install kubernetes-helm
+      ```
+    - Verify installation:
+      ```bash
+      helm version
+      ```
+
 5. **Cilium**: Install Cilium for networking and security in Kubernetes ([Install Cilium](https://docs.cilium.io/en/stable/gettingstarted/)).
-    a. Install using **Chocolatey**
-        choco install cilium-cli
-        cilium install
-    b. Verify installation
-        helm version
-        cilium status
+    - Install using Chocolatey:
+      ```bash
+      choco install cilium-cli
+      cilium install
+      ```
+    - Verify installation:
+      ```bash
+      cilium status
+      ```
 
-## Phase 2: Testing/Learning how to make Microservices
+---
 
-### Building a Microservice on Docker Desktop
-- Make a simple microservice that says a message and run it on Docker
-  - install flask through the terminal (pip install flask)
-  - make a serviceA.py say a message using jsonify
-  - run the service by typing, python service.py, in the terminal
-  - then can click on the link and see the message in your browser
-- Adding routes
-  - by adding some more code you can add routes to the links
-  - then if you add /route_name at the end of the link it will do the new task
-- Build and running a Container
-  - cd path\to\your\project
-  - docker build -t service-a
-  - docker run -d -p 5000:5000 service-a
-  - Check running containers. (docker ps)
-  - Stopping a container. (docker stop<container_id>)
+## Phase 2: Building Microservices Locally
 
-### Adding a Second Microservice
-- Make a second service that works with the first
-  - make sure to add the URL in a variable somewhere
-    - SERVICE_A_URL = "http://127.0.0.1:5000/data"
-  - need to install requests library
-    - pip install requests
-  - run both services at the same time and see the communication between them
-    - go to http://127.0.0.1:5001/fetch to check
-- Build both together on Docker
-  - make a docker file for both services
-    - make a new file called Dockerfile
-  - build both services and run them like before
-    - docker build -t service-a -f Dockerfile.serviceA_test .
+### Create Flask Microservices
 
+1. **Build Service A**:
+    - Handles Spotify OAuth and user input (month/year).
+    - Sends data and access token to Service B.
 
-## Phase 3: Deploy Microservices
+2. **Build Service B**:
+    - Receives request from Service A.
+    - Uses Spotify Web API to return user's top tracks for the last 4 weeks.
 
-### Build Two Microservices
-- Develop two complex service APIs:
-  - **Service A** (provides core functionality)
-  - **Service B** (communicates with Service A)
-- Containerize both services using Docker.
-### Using the Spotify API
-1. **Create a Spotify Developer Account**:
-   - Visit [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)
-   - Create an application and obtain `client_id` and `client_secret`
+### Run Locally with Docker
 
-2. **Install Required Library**:
-   ```sh
-   pip install spotipy
-   ```
+1. **Build Docker Images**:
+    ```bash
+    docker build -t spotify-service-a ./service_a
+    docker build -t spotify-service-b ./service_b
+    ```
 
-### Deploy the Services on Kubernetes
-Steps Taken to Build & Deploy the Spotify Monthly Wrapped App
-1. Created Two Microservices Using Flask
-Service A handles Spotify OAuth, collects the user's desired month and year, and sends that data along with the access token to Service B.
+2. **Run Docker Containers**:
+    ```bash
+    docker run -d --name service-b -p 5001:5001 spotify-service-b
+    docker run -d --name service-a -p 5000:5000 spotify-service-a
+    ```
 
-Service B receives the data and access token, fetches the user's top Spotify tracks using the Spotify Web API (short-term range), and returns the results.
+3. **Access Application**:
+    - Visit `http://localhost:5000` in your browser to start the Spotify login flow.
 
-2. Configured Spotify OAuth
-Registered a Spotify Developer application and obtained a Client ID and Client Secret.
+---
 
-Set a valid Redirect URI (http://localhost:30000/callback) in the Spotify dashboard and matched it in the application code and environment variables.
+## Phase 3: Spotify API Setup
 
-3. Created Dockerfiles for Both Services
-Wrote Dockerfiles for service_a and service_b to package each microservice with its dependencies.
+### Configure Spotify Developer Application
 
-Used Python 3.10 slim base images for lightweight containers.
+1. **Create Spotify App**:
+    - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/)
+    - Create a new app and copy your `Client ID` and `Client Secret`
 
-4. Built Docker Images
-Configured Docker to use the Minikube daemon with eval $(minikube docker-env).
+2. **Set Redirect URI**:
+    - Add the following URI to your app settings:
+      ```
+      http://localhost:30000/callback
+      ```
 
-Built both services locally inside Minikube using:
+3. **Set Up `.env` File**:
+    ```env
+    SPOTIPY_CLIENT_ID=your_client_id
+    SPOTIPY_CLIENT_SECRET=your_client_secret
+    SPOTIPY_REDIRECT_URI=http://localhost:30000/callback
+    ```
 
-bash
-Copy
-Edit
-docker build -t spotify-service-a ./service_a
-docker build -t spotify-service-b ./service_b
-5. Wrote Kubernetes YAML Manifests
-Created:
+---
 
-A ConfigMap to store Spotify credentials and redirect URI.
+## Phase 4: Kubernetes Deployment
 
-A Deployment and Service YAML for each microservice.
+### Prepare Kubernetes Files
 
-Configured:
+1. **Create ConfigMap for Spotify Credentials**
+    - `spotify-config.yaml` stores environment variables securely.
 
-service-a as a NodePort so it’s accessible externally.
+2. **Create Deployment and Service Files**
+    - `spotify-service-a.yaml`: NodePort service for external access
+    - `spotify-service-b.yaml`: ClusterIP service for internal communication
 
-service-b as a ClusterIP service for internal communication.
+### Start Kubernetes with Minikube
 
-6. Deployed to Kubernetes
-Applied all Kubernetes manifests using kubectl apply -f ....
+1. **Start Minikube**:
+    ```bash
+    minikube start
+    ```
 
-Started the Minikube cluster and accessed service-a through:
+2. **Use Minikube's Docker Daemon**:
+    ```bash
+    eval $(minikube docker-env)
+    ```
 
-bash
-Copy
-Edit
-minikube service service-a
-7. Tested the Application Flow
-Logged in with Spotify via the frontend (service-a).
+3. **Build Docker Images in Minikube**:
+    ```bash
+    docker build -t spotify-service-a ./service_a
+    docker build -t spotify-service-b ./service_b
+    ```
 
-Provided a target month and year.
+4. **Apply Kubernetes Manifests**:
+    ```bash
+    kubectl apply -f spotify-config.yaml
+    kubectl apply -f spotify-service-b.yaml
+    kubectl apply -f spotify-service-a.yaml
+    ```
 
-Verified that the backend (service-b) returned top track data using the user’s access token.
+5. **Access the Application**:
+    ```bash
+    minikube service service-a
+    ```
 
+---
 
+## Phase 5: Integrating with Cilium
+
+### Configure and Monitor Cilium
+
+1. **Ensure Cilium is Running**:
+    ```bash
+    cilium status
+    ```
+
+2. **Run Connectivity Tests**:
+    ```bash
+    cilium connectivity test
+    ```
+
+3. **Label Namespace for Cilium (Optional)**:
+    ```bash
+    kubectl label namespace default "kubernetes.io/metadata.name"="default"
+    ```
+
+4. **Deploy Services With Cilium Active**:
+    ```bash
+    kubectl apply -f spotify-config.yaml
+    kubectl apply -f spotify-service-b.yaml
+    kubectl apply -f spotify-service-a.yaml
+    ```
+
+5. **Monitor Traffic with Hubble** (Optional):
+    ```bash
+    cilium hubble enable
+    cilium hubble port-forward &
+    hubble ui
+    ```
+
+6. **(Optional) Apply Network Policies**:
+    - Example policy to restrict access to Service A:
+    ```yaml
+    apiVersion: cilium.io/v2
+    kind: CiliumNetworkPolicy
+    metadata:
+      name: allow-service-b-to-a
+    spec:
+      endpointSelector:
+        matchLabels:
+          app: service-a
+      ingress:
+      - fromEndpoints:
+        - matchLabels:
+            app: service-b
+    ```
+    - Apply the policy:
+    ```bash
+    kubectl apply -f cilium-policy.yaml
+    ```
+
+---
+
+## Summary of What Was Done
+
+You built and deployed a two-service Flask application that uses Spotify OAuth to generate a personalized monthly music summary, Dockerized both services, and deployed them on Kubernetes with Minikube and Cilium for observability and security.
+
+---
 
 ## Additional Notes
-- Used **Chocolatey** for some installations on Windows.
-- Docker took ~20 minutes to enable Kubernetes; required a restart.
-- Have a working plan for coding the two microservices.
+
+- Used **Chocolatey** on Windows for easy tool installation.
+- Docker may take ~20 minutes to enable Kubernetes the first time.
+- `service-a.py` must use `http://service-b:5001/...` when running inside Kubernetes.
+- Use `docker ps`, `docker stop <id>`, and `docker rm <id>` to manage containers.
+- Clean up unused Docker images with `docker rmi image-name` after stopping/deleting associated containers.
+
