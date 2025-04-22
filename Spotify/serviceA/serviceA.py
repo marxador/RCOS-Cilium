@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request, jsonify
+from flask import Flask, render_template, redirect, request, jsonify
 import requests
 import os
 from dotenv import load_dotenv
@@ -9,10 +9,17 @@ load_dotenv()
 app = Flask(__name__)
 
 CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("SPOTIPY_REDIRECT_URI")
 SCOPE = "user-top-read"
 
+# Landing page with login button
 @app.route("/")
+def home():
+    return render_template("index.html")
+
+# Redirect to Spotify OAuth
+@app.route("/login")
 def login():
     auth_url = (
         "https://accounts.spotify.com/authorize"
@@ -23,7 +30,7 @@ def login():
     )
     return redirect(auth_url)
 
-
+# Spotify callback after login
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
@@ -33,40 +40,30 @@ def callback():
         "code": code,
         "redirect_uri": REDIRECT_URI,
         "client_id": CLIENT_ID,
-        "client_secret": os.getenv("SPOTIPY_CLIENT_SECRET"),
+        "client_secret": CLIENT_SECRET,
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     response = requests.post(token_url, data=body, headers=headers)
     tokens = response.json()
     access_token = tokens.get("access_token")
 
-    # return (
-    #     '''
-    #     <form action="/wrapped" method="post">
-    #         <input type="hidden" name="token" value="{0}">
-    #         Month (1–12): <input name="month"><br>
-    #         Year (e.g., 2024): <input name="year"><br>
-    #         <input type="submit" value="Get My Monthly Wrapped">
-    #     </form>
-    #     '''.format(access_token)
-    # )
+    # Show form with access_token hidden in input
+    return render_template("form.html", token=access_token)
 
-    return redirect(f"http://localhost:3000/form?token={access_token}")
-
+# Handle form submission and display results
 @app.route("/wrapped", methods=["POST"])
 def get_wrapped():
     access_token = request.form["token"]
-    month = request.form["month"]
-    year = request.form["year"]
+    time_range = request.form["range"]  # short_term, medium_term, or long_term
 
     payload = {
         "access_token": access_token,
-        "month": month,
-        "year": year,
+        "range": time_range,
     }
 
     res = requests.post("http://localhost:5001/monthly-wrapped", json=payload)
-    return jsonify(res.json())
+    result = res.json()
 
+    return render_template("results.html", data=result)
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

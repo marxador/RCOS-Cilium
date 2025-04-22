@@ -1,96 +1,100 @@
-# Improving the GUI for the Spotify Monthly Wrapped App
+##  Spotify Wrapped (Yearly) — Flask + Bootstrap App
 
-This guide outlines best practices and concrete steps for enhancing the graphical user interface (GUI) of the Spotify Monthly Wrapped microservices application.
-
----
-
-## Phase 1: Define GUI Goals
-
-### Objectives
-1. **Improve User Experience (UX)**: Make the app more visually appealing and intuitive.
-2. **Streamline OAuth Flow**: Guide users through Spotify login clearly.
-3. **Display Monthly Data Elegantly**: Present music stats using modern charts and visual elements.
-4. **Ensure Responsiveness**: Make it mobile- and desktop-friendly.
+This guide documents how to build a simplified, GUI-based Spotify Wrapped web app using **Flask**, **Bootstrap**, and **Spotify's API**. It replaces the React frontend with classic HTML templates for easier development and cleaner integration.
 
 ---
 
-## Phase 2: Choose a Frontend Technology
-
-### Recommended Stack
-- **React** (or Vue/Angular): Ideal for creating responsive, component-based UIs.
-- **Tailwind CSS**: For modern, utility-first styling.
-- **Chart.js** or **Recharts**: To display top songs/artists in visual formats.
-
----
-
-## Phase 3: Build Frontend Features
-
-### 1. Landing Page
-- Clear app branding and CTA ("Log in with Spotify")
-- Light/dark theme toggle (optional)
-
-### 2. OAuth Redirect
-- Use query parameters to detect login success/failure
-- Display a loading animation while processing the token
-
-### 3. Month/Year Selector
-- Simple date picker UI or dropdowns
-- Prevent submission until both fields are filled
-
-### 4. Wrapped Results Page
-- Show a summary header (e.g., "Here’s your Wrapped for March 2024!")
-- Top Tracks list:
-  - Include song name, artist, album art
-- Optional:
-  - **Pie chart** of genres
-  - **Bar chart** of top artists
-
----
-
-## Phase 4: Connect to Backend
-
-### API Integration
-- Use `axios` or `fetch` to call Service A endpoints
-- Send selected month/year and handle token storage in local/session storage
-- Parse and render JSON response from Service B
-
----
-
-## Phase 5: Containerize and Deploy the Frontend
-
-### Dockerfile Example
-```Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY . .
-RUN npm install && npm run build
-EXPOSE 3000
-CMD ["npx", "serve", "-s", "build"]
+##  Project Structure
+```
+Spotify/
+├── serviceA.py                 # Flask app that handles UI, login, and API logic
+├── serviceB.py                 # Flask microservice that fetches top tracks from Spotify
+├── .env                        # Stores your Spotify credentials
+├── templates/
+│   ├── index.html              # Landing page with login button
+│   ├── form.html               # Time range selection form
+│   └── results.html            # Displays top tracks
 ```
 
-### Kubernetes Deployment
-- Create a `frontend-deployment.yaml` and expose via `NodePort` or `Ingress`
-- Use internal DNS to communicate with `service-a`
+---
+
+##  Step 1: Setup Environment
+
+1. **Install dependencies**:
+```bash
+pip install flask requests python-dotenv
+```
+
+2. **Create `.env` file** with your Spotify app credentials:
+```env
+SPOTIPY_CLIENT_ID=your_client_id
+SPOTIPY_CLIENT_SECRET=your_client_secret
+SPOTIPY_REDIRECT_URI=http://localhost:5000/callback
+```
+Make sure the redirect URI is also added in your Spotify Developer Dashboard.
 
 ---
 
-## Phase 6: Polish and Optimize
+##  Step 2: Run the App
 
-### UX Polish
-- Add animations (e.g., with Framer Motion)
-- Handle errors and edge cases (e.g., empty data)
-- Show a friendly message for new users with little listening history
+1. **Start serviceB** in one terminal:
+```bash
+python serviceB.py
+```
 
-### SEO & Performance
-- Use Lighthouse to audit performance
-- Lazy-load large assets
-- Use semantic HTML for accessibility
+2. **Start serviceA** in a second terminal:
+```bash
+python serviceA.py
+```
+
+3. Open your browser and visit:
+```
+http://localhost:5000
+```
+
+You’ll be taken through a Spotify login flow, then asked to choose a time range. Results will display your top tracks for that range.
 
 ---
 
-## Summary
+##  Step 3: HTML Template Overview
 
-Enhancing the GUI of the Spotify Monthly Wrapped app improves both functionality and user engagement. By using modern web tools like React, Tailwind CSS, and Recharts, you can deliver a professional and delightful experience while maintaining clean architecture and deployment compatibility with Docker and Kubernetes.
+### `index.html`
+- Landing page with a Bootstrap-styled login button.
 
-Let us know if you'd like example components or starter templates!
+### `form.html`
+- Presents a dropdown for users to select a time range:
+  - **short_term** → last 4 weeks
+  - **medium_term** → last 6 months
+  - **long_term** → 1+ years
 
+### `results.html`
+- Shows a list of your top 10 tracks with a heading like:
+  > Your Wrapped for the last 6 months
+
+---
+
+##  API Flow Summary
+
+1. User logs in via Spotify OAuth
+2. Spotify redirects to `/callback` with an access code
+3. `serviceA.py` exchanges the code for an access token
+4. User selects a time range via `/form.html`
+5. Form posts to `/wrapped`, which calls `serviceB.py`
+6. `serviceB.py` calls Spotify's `top tracks` API and returns JSON
+7. `serviceA.py` renders `results.html` with the data
+
+---
+
+##  Benefits of This Approach
+- Simple, beginner-friendly GUI (HTML + Bootstrap)
+- No need for React or Node.js
+- Runs on pure Python + Flask
+- Easy to deploy and maintain
+
+---
+
+##  Future Improvements
+- Add album art or preview links
+- Support top **artists** in addition to tracks
+- Use charts (e.g. pie chart for genres)
+- Save user data to a database for historical stats
