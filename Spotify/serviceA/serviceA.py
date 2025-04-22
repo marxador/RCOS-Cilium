@@ -23,6 +23,7 @@ def login():
     )
     return redirect(auth_url)
 
+
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
@@ -39,16 +40,18 @@ def callback():
     tokens = response.json()
     access_token = tokens.get("access_token")
 
-    return (
-        '''
-        <form action="/wrapped" method="post">
-            <input type="hidden" name="token" value="{0}">
-            Month (1–12): <input name="month"><br>
-            Year (e.g., 2024): <input name="year"><br>
-            <input type="submit" value="Get My Monthly Wrapped">
-        </form>
-        '''.format(access_token)
-    )
+    # return (
+    #     '''
+    #     <form action="/wrapped" method="post">
+    #         <input type="hidden" name="token" value="{0}">
+    #         Month (1–12): <input name="month"><br>
+    #         Year (e.g., 2024): <input name="year"><br>
+    #         <input type="submit" value="Get My Monthly Wrapped">
+    #     </form>
+    #     '''.format(access_token)
+    # )
+
+    return redirect(f"http://localhost:3000/form?token={access_token}")
 
 @app.route("/wrapped", methods=["POST"])
 def get_wrapped():
@@ -62,7 +65,7 @@ def get_wrapped():
         "year": year,
     }
 
-    res = requests.post("http://service-b:5001/monthly-wrapped", json=payload)
+    res = requests.post("http://localhost:5001/monthly-wrapped", json=payload)
     return jsonify(res.json())
 
 if __name__ == "__main__":
